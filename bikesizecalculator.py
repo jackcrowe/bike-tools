@@ -2,9 +2,7 @@
 bikesizecalculator:: a module for calculating the bike size appropriate for a person.
 """
 
-# Uses the craigslist python library from github
-# https://github.com/jackcrowe/bike-tools.git
-from craigslist import *
+from math import *
 
 # globals to store categorization of bike types
 mountain_geometry = "MTN"
@@ -22,20 +20,37 @@ bike_type_categories = {
      'XC' : mountain_geometry }
 
 """ calculates the correct bike size for the given bike type and person's height"""
-def calculate_bike_size(bike_type, person_height):
-    try:
-        category = get_geometry_categorization(bike_type)
-        if category == road_geometry:
-            return 22
-        return 0
-    except ValueError:
-        pass
+def calculate_bike_size(bike_type, inseam):
+    category = get_geometry_categorization(bike_type)
+    if category == road_geometry:
+        return get_road_size(inseam)
+    else:
+        return get_mountain_size(inseam)
       
-""" generates a craigslist given an array of bike types and a person's height"""
-def generate_craigslist_query(bike_types, person_height):
-    search('http://portland.craigslist.org/', 'bia', 'Schwinn', 'T', 'sss')
-    return
+""" generates a craigslist query given an array of bike types and a person's height"""
+def generate_craigslist_query(bike_types, inseam):
+    if len(bike_types) == 0:
+        return ''
+    query = ''
+    for bike_type in bike_types:
+        bike_size = int(calculate_bike_size(bike_type, inseam))
+        query += '"'+bike_type+' '+str(bike_size)+'"|'
+    location = 'http://chicago.craigslist.org/'
+    category = 'bik'
+    search_type = 'T'
+    search_url = '%ssearch/%s?query=%s&srchType=%s' % (
+            location, category, query, search_type)
+    return search_url
 
 """ looks up the category of geometry for a bike type """
 def get_geometry_categorization(bike_type):
     return bike_type_categories[bike_type]
+    
+""" returns the appropriate road bike size for a person of the given height """
+def get_road_size(inseam):
+    return floor(1.72*float(inseam) - 0.68)
+    
+""" returns the appropriate mountain bike size for a person of the given height """
+def get_mountain_size(inseam):
+    return inseam-10
+ 
